@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32616.157
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StellarisTechCore", "StellarisTechCore\StellarisTechCore.csproj", "{BEDA40A1-CB37-4CE1-833A-B7C126509BAF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StellarisTechCore.Tests", "StellarisTechCore.Tests\StellarisTechCore.Tests.csproj", "{7D27A19D-D5A5-4782-8609-3C86CC6C9003}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BEDA40A1-CB37-4CE1-833A-B7C126509BAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEDA40A1-CB37-4CE1-833A-B7C126509BAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEDA40A1-CB37-4CE1-833A-B7C126509BAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEDA40A1-CB37-4CE1-833A-B7C126509BAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D27A19D-D5A5-4782-8609-3C86CC6C9003}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D27A19D-D5A5-4782-8609-3C86CC6C9003}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D27A19D-D5A5-4782-8609-3C86CC6C9003}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D27A19D-D5A5-4782-8609-3C86CC6C9003}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E81090DF-05BC-4F6D-9385-4F10580D2695}
+	EndGlobalSection
+EndGlobal
