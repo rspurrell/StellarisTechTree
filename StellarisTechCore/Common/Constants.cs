@@ -2,7 +2,7 @@
 {
     internal static class Constants
     {
-        public static class TechProperty
+        public static class TechRegexGroup
         {
             public const string ID = "id";
             public const string AI_UPDATE_TYPE = "ai_update_type";

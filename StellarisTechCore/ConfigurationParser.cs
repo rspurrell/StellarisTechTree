@@ -7,96 +7,137 @@
 
     public class ConfigurationParser
     {
-        private static readonly Regex _commentRegex = new Regex(@"\s*#.+\r?$\n", RegexOptions.Multiline);
-        private static readonly Regex _emptyLinesRegex = new Regex(@"^\s*\r?$\n", RegexOptions.Multiline);
+        private static readonly Regex _emptyLineOrCommentRegex = new(@"\s*(?:#.*)?\r?$", RegexOptions.Multiline);
+        private static readonly Regex _variablesRegex = new(@"^(?<key>@\w+) = (?<value>\w+)\r?$\n", RegexOptions.Multiline);
+
+        private readonly Dictionary<string, int?> _variables;
         private readonly Regex _techRegex;
 
         public ConfigurationParser(string techRegexPattern)
+            : this(techRegexPattern, null)
+        { }
+
+        public ConfigurationParser(string techRegexPattern, IReadOnlyDictionary<string, int>? defaultVariables)
         {
             _techRegex = new Regex(techRegexPattern, RegexOptions.Multiline);
+            _variables = defaultVariables?.ToDictionary(kvp => kvp.Key, kvp => (int?)kvp.Value) ?? new Dictionary<string, int?>();
         }
 
-        public List<Technology> ParseTechnologies(string value, Dictionary<string, string> substitutions)
+        /// <summary>
+        /// <para>Parses and sets global variable substitutions for use when parsing technologies. Variables should be supplied before parsing technologies.</para>
+        /// </summary>
+        /// <param name="value">The raw text of variables from a Stellaris configuration file.</param>
+        public void ParseSetVariables(string value)
         {
-            value = value.Replace("\r\n", "\n");
-            value = _commentRegex.Replace(value, "\n");
-            value = _emptyLinesRegex.Replace(value, string.Empty);
-            value = value.Replace("\n", "\r\n");
+            MatchCollection matches = _variablesRegex.Matches(value);
+            if (matches.Count == 0)
+                return;
+            SetVariables(matches, _variables);
+        }
 
-            var matches = _techRegex.Matches(value);
-            var technologies = new List<Technology>();
+        private static IReadOnlyDictionary<string, int?> ParseOverrides(string value, IReadOnlyDictionary<string, int?> variables)
+        {
+            MatchCollection matches = _variablesRegex.Matches(value);
+            if (matches.Count == 0)
+                return variables;
+            var results = variables?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, int?>();
+            SetVariables(matches, results);
+            return results;
+        }
+
+        private static void SetVariables(MatchCollection matches, Dictionary<string, int?> variables)
+        {
             foreach (Match m in matches)
             {
-                technologies.Add(ParseTechnology(m.Groups, substitutions));
+                var k = m.Groups["key"].Value;
+                var v = m.Groups["value"].Value;
+                variables[k] = string.IsNullOrEmpty(v) ? null : int.Parse(v);
             }
-            return technologies;
         }
 
-        private static Technology ParseTechnology(GroupCollection groups, Dictionary<string, string> substitutions)
+        /// <summary>
+        /// Parses technologies from a Stellaris configuration file.
+        /// </summary>
+        /// <param name="value">The raw technology text from a Stellaris configuration file.</param>
+        /// <returns>A list of technologies successfully parsed from value.</returns>
+        public List<Technology> ParseTechnologies(string value)
         {
-            int iTier = ParseAndSubstitute<int>(groups[TechProperty.TIER].Value, substitutions);
-            int iCost = ParseAndSubstitute<int>(groups[TechProperty.COST].Value, substitutions);
-            int? iLevels = ParseAndSubstitute<int?>(groups[TechProperty.LEVELS].Value, substitutions);
-            int iWeight = ParseAndSubstitute<int>(groups[TechProperty.WEIGHT].Value, substitutions);
-            Dictionary<string, Technology>? prereqs = ParsePrereqs(groups[TechProperty.PREREQUISITES].Value);
-            WeightModifier? wm = ParseWeightModifier(groups[TechProperty.WEIGHT_MODIFIER].Value);
+            // clean-up and normalize
+            value = _emptyLineOrCommentRegex
+                .Replace(value.Replace("\r\n", "\n"), string.Empty)
+                .Replace("\n", "\r\n");
+
+            var localOverrides = ParseOverrides(value, _variables);
+            return _techRegex.Matches(value)
+                .Select(m => ParseTechnology(m.Groups, localOverrides))
+                .ToList();
+        }
+
+        private static Technology ParseTechnology(GroupCollection groups, IReadOnlyDictionary<string, int?> variables)
+        {
+            var tier = ParseAndSubstitute<int>(groups[TechRegexGroup.TIER].Value, variables);
+            var cost = ParseAndSubstitute<int>(groups[TechRegexGroup.COST].Value, variables);
+            var levels = ParseAndSubstitute<int?>(groups[TechRegexGroup.LEVELS].Value, variables);
+            var weight = ParseAndSubstitute<int>(groups[TechRegexGroup.WEIGHT].Value, variables);
+            var prereqs = ParsePrereqs(groups[TechRegexGroup.PREREQUISITES].Value);
+            var wm = ParseWeightModifier(groups[TechRegexGroup.WEIGHT_MODIFIER].Value);
 
             return new Technology(
-                groups[TechProperty.ID].Value,
-                groups[TechProperty.ID].Value,
-                Utilities.GetArea(groups[TechProperty.AREA].Value),
-                Utilities.GetCategory(groups[TechProperty.CATEGORY].Value),
-                iCost,
-                groups[TechProperty.START_TECH].Value == "yes",
-                iTier,
-                iWeight)
+                groups[TechRegexGroup.ID].Value,
+                groups[TechRegexGroup.ID].Value,
+                Utilities.GetArea(groups[TechRegexGroup.AREA].Value),
+                Utilities.GetCategory(groups[TechRegexGroup.CATEGORY].Value),
+                cost,
+                groups[TechRegexGroup.START_TECH].Value == "yes",
+                tier,
+                weight)
             {
-                AIUpdateType = groups[TechProperty.AI_UPDATE_TYPE].Value,
-                AIWeight = groups[TechProperty.AI_WEIGHT].Value,
-                FeatureFlags = groups[TechProperty.FEATURE_FLAGS].Value,
-                Gateway = groups[TechProperty.GATEWAY].Value,
-                Icon = groups[TechProperty.ICON].Value,
-                IsDangerous = groups[TechProperty.IS_DANGEROUS].Value == "yes",
-                IsRare = groups[TechProperty.IS_RARE].Value == "yes",
-                IsReverseEngineerable = groups[TechProperty.IS_REVERSE_ENGINEERABLE].Value == "yes",
-                Levels = iLevels,
-                Modifier = groups[TechProperty.MODIFIER].Value,
-                ModWeightIfGroupPicked = groups[TechProperty.MOD_WEIGHT_IF_GROUP_PICKED].Value,
-                Potential = groups[TechProperty.POTENTIAL].Value,
-                PrereqForDesc = groups[TechProperty.PREREQFOR_DESC].Value,
+                AIUpdateType = groups[TechRegexGroup.AI_UPDATE_TYPE].Value,
+                AIWeight = groups[TechRegexGroup.AI_WEIGHT].Value,
+                FeatureFlags = groups[TechRegexGroup.FEATURE_FLAGS].Value,
+                Gateway = groups[TechRegexGroup.GATEWAY].Value,
+                Icon = groups[TechRegexGroup.ICON].Value,
+                IsDangerous = groups[TechRegexGroup.IS_DANGEROUS].Value == "yes",
+                IsRare = groups[TechRegexGroup.IS_RARE].Value == "yes",
+                IsReverseEngineerable = groups[TechRegexGroup.IS_REVERSE_ENGINEERABLE].Value == "yes",
+                Levels = levels,
+                Modifier = groups[TechRegexGroup.MODIFIER].Value,
+                ModWeightIfGroupPicked = groups[TechRegexGroup.MOD_WEIGHT_IF_GROUP_PICKED].Value,
+                Potential = groups[TechRegexGroup.POTENTIAL].Value,
+                PrereqForDesc = groups[TechRegexGroup.PREREQFOR_DESC].Value,
                 Prerequisites = prereqs,
-                WeightGroups = groups[TechProperty.WEIGHT_GROUPS].Value,
+                WeightGroups = groups[TechRegexGroup.WEIGHT_GROUPS].Value,
                 WeightModifier = wm
             };
         }
 
-        public static TResult? ParseAndSubstitute<TResult>(string value, Dictionary<string, string> substitutions, TResult? defaultValue = default(TResult))
+        private static TResult? ParseAndSubstitute<TResult>(string value, IReadOnlyDictionary<string, int?> variables)
         {
             var t = typeof(TResult);
             if (value.StartsWith("@"))
             {
-                if (!substitutions.ContainsKey(value))
+                if (!variables.ContainsKey(value))
                 {
-                    throw new ArgumentException($"No substitution found for {value}", nameof(value));
+                    throw new ArgumentException($"No substitution variable found for {value}. Provide variables by calling {nameof(ParseSetVariables)} before parsing technologies.", nameof(value));
                 }
-                value = substitutions[value];
+                return (TResult?)Convert.ChangeType(variables[value], Nullable.GetUnderlyingType(t) ?? t);
             }
             if (!string.IsNullOrEmpty(value))
             {
                 return (TResult)Convert.ChangeType(value, Nullable.GetUnderlyingType(t) ?? t);
             }
-            return defaultValue;
+            return default;
         }
 
-        private static Dictionary<string, Technology>? ParsePrereqs(string sPrereqs)
+        private static List<string>? ParsePrereqs(string sPrereqs)
         {
-            Dictionary<string, Technology>? prereqs = null;
+            List<string>? prereqs = null;
             if (!string.IsNullOrEmpty(sPrereqs))
             {
-                prereqs = new Dictionary<string, Technology>();
+                prereqs = new List<string>();
                 foreach (var v in sPrereqs.Trim().TrimStart('"').TrimEnd('"').Split("\" \""))
                 {
-                    prereqs[v] = null; // TODO: relate prereq technologies
+                    prereqs.Add(v);
                 }
             }
             return prereqs;

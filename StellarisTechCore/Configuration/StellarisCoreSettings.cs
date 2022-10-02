@@ -24,13 +24,14 @@
         public string TechPath { get; set; }
         public string TechRegex { get; set; }
         public List<StellarisConfigFile> TechFiles { get; set; }
+        public string VariablesPath { get; set; }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public StellarisCoreSettings() { }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     }
 
-    public class StellarisConfigFile
+    public sealed class StellarisConfigFile
     {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public string Tag { get; set; }

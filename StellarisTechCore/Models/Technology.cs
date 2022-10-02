@@ -33,7 +33,7 @@ weight_groups
         public string Name { get; set; }
         public string? Potential { get; set; }
         public string? PrereqForDesc { get; set; }
-        public Dictionary<string, Technology>? Prerequisites { get; set; }
+        public List<string>? Prerequisites { get; set; }
         public bool StartingTech { get; set; }
         public int Tier { get; set; }
         public int Weight { get; set; }

@@ -6,80 +6,80 @@ namespace StellarisTechCore.Tests
     public class UnitTest1
     {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        private static Dictionary<string, string> SUBSTITUTIONS;
+        private static Dictionary<string, int> SUBSTITUTIONS;
         private static Regex TECH_COUNTER = new Regex(@"^\w+", RegexOptions.Multiline);
 
-        private static ConfigurationParser _parser;
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 
         [TestInitialize]
         public void Init()
         {
-            SUBSTITUTIONS = new Dictionary<string, string>()
+            SUBSTITUTIONS = new Dictionary<string, int>()
             {
-                { "@tier0cost1", "1" },
-                { "@tier1cost1", "11" },
-                { "@tier1cost2", "12" },
-                { "@tier1cost3", "13" },
-                { "@tier2cost1", "21" },
-                { "@tier2cost2", "22" },
-                { "@tier2cost3", "23" },
-                { "@tier3cost1", "31" },
-                { "@tier3cost2", "32" },
-                { "@tier3cost3", "33" },
-                { "@tier4cost1", "41" },
-                { "@tier4cost2", "42" },
-                { "@tier4cost3", "43" },
-                { "@tier5cost1", "51" },
-                { "@tier5cost2", "52" },
-                { "@tier5cost3", "53" },
+                { "@tier0cost1", 1 },
+            //    { "@tier1cost1", 11 },
+            //    { "@tier1cost2", 12 },
+            //    { "@tier1cost3", 13 },
+            //    { "@tier2cost1", 21 },
+            //    { "@tier2cost2", 22 },
+            //    { "@tier2cost3", 23 },
+            //    { "@tier3cost1", 31 },
+            //    { "@tier3cost2", 32 },
+            //    { "@tier3cost3", 33 },
+            //    { "@tier4cost1", 41 },
+            //    { "@tier4cost2", 42 },
+            //    { "@tier4cost3", 43 },
+            //    { "@tier5cost1", 51 },
+            //    { "@tier5cost2", 52 },
+            //    { "@tier5cost3", 53 },
 
-                { "@tier1weight1", "11" },
-                { "@tier1weight2", "12" },
-                { "@tier1weight3", "13" },
-                { "@tier2weight1", "21" },
-                { "@tier2weight2", "22" },
-                { "@tier2weight3", "23" },
-                { "@tier3weight1", "31" },
-                { "@tier3weight2", "32" },
-                { "@tier3weight3", "33" },
-                { "@tier4weight1", "41" },
-                { "@tier4weight2", "42" },
-                { "@tier4weight3", "43" },
-                { "@tier5weight1", "51" },
-                { "@tier5weight2", "52" },
-                { "@tier5weight3", "53" },
+            //    { "@tier1weight1", 11 },
+            //    { "@tier1weight2", 12 },
+            //    { "@tier1weight3", 13 },
+            //    { "@tier2weight1", 21 },
+            //    { "@tier2weight2", 22 },
+            //    { "@tier2weight3", 23 },
+            //    { "@tier3weight1", 31 },
+            //    { "@tier3weight2", 32 },
+            //    { "@tier3weight3", 33 },
+            //    { "@tier4weight1", 41 },
+            //    { "@tier4weight2", 42 },
+            //    { "@tier4weight3", 43 },
+            //    { "@tier5weight1", 51 },
+            //    { "@tier5weight2", 52 },
+            //    { "@tier5weight3", 53 },
 
-                { "@repeatableTechBaseCost", "-1" },
-                { "@repatableTechFactor", "-1" }, // yes, "repatable"
-                { "@repeatableTechFactor", "-1" }, // incase they fix the spelling
-                { "@repeatableTechLevelCost", "-1" },
-                { "@repeatableTechTier", "6" },
-                { "@repeatableTechWeight", "-1" },
+                { "@repeatableTechBaseCost", -1 },
+            //    { "@repatableTechFactor", -1 }, // yes, "repatable"
+            //    { "@repeatableTechFactor", -1 }, // incase they fix the spelling
+            //    { "@repeatableTechLevelCost", -1 },
+                { "@repeatableTechTier", 6 },
+                { "@repeatableTechWeight", -1 },
 
-                { "@fallentechcost", "66" },
-                { "@fallentechtier", "6" },
+                { "@fallentechcost", 66 },
+                { "@fallentechtier", 6 },
 
-                { "@horizontechcost1", "66" },
-                { "@horizontechcost2", "66" },
-                { "@horizontechtier", "6" },
+                { "@horizontechcost1", 66 },
+                { "@horizontechcost2", 66 },
+                { "@horizontechtier", 6 },
 
-                { "@guardiantechcost", "66" },
-                { "@guardiantechtier", "6" },
+                { "@guardiantechcost", 66 },
+                { "@guardiantechtier", 6 },
             };
-            _parser = new ConfigurationParser(StellarisCoreSettings.Settings.TechRegex);
         }
 
         [TestMethod]
         public void IntegrationTest()
         {
+            var parser = new ConfigurationParser(StellarisCoreSettings.Settings.TechRegex, SUBSTITUTIONS);
+            parser.ParseSetVariables(File.ReadAllText($"{StellarisCoreSettings.Settings.VariablesPath}"));
             var techs = new List<Technology>();
             var partitionedTechs = new Dictionary<string, List<Technology>>();
             foreach (StellarisConfigFile file in StellarisCoreSettings.Settings.TechFiles)
             {
                 var techData = File.ReadAllText($"{StellarisCoreSettings.Settings.TechPath}{file.FileName}");
-                var parsedTechs = _parser.ParseTechnologies(techData, SUBSTITUTIONS);
+                var parsedTechs = parser.ParseTechnologies(techData);
                 Assert.AreEqual(TECH_COUNTER.Matches(techData).Count, parsedTechs.Count);
                 techs.AddRange(parsedTechs);
                 partitionedTechs[file.Tag] = parsedTechs;
