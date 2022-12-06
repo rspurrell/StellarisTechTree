@@ -29,5 +29,24 @@
             public const string WEIGHT_GROUPS = "weight_groups";
             public const string WEIGHT_MODIFIER = "weight_modifier";
         }
+
+        public static class TechVariableRegexGroup
+        {
+            public const string KEY = "key";
+            public const string VALUE = "value";
+        }
+
+        public static class TechLocalizationRegexGroup
+        {
+            public const string ID = "id";
+            public const string NAME = "name";
+        }
+
+        public static class RegexPattern
+        {
+            public const string EMPTY_LINE_OR_COMMENT = @"\s*(?:#.*)?\r?$";
+            public const string LOCALIZATIONS = $@"^ ?(?<{TechLocalizationRegexGroup.ID}>(?:(?!(?:_[Dd][Ee][Ss][Cc][:_])|(?:_[Ee][Ff][Ff][Ee][Cc][Tt]:))\w)+):\d ""(?<{TechLocalizationRegexGroup.NAME}>[\w .,%$:\-]+)""";
+            public const string VARIABLES = $@"^(?<{TechVariableRegexGroup.KEY}>@\w+) = (?<{TechVariableRegexGroup.VALUE}>\w+)\r?$\n";
+        }
     }
 }

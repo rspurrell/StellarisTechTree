@@ -73,7 +73,11 @@ namespace StellarisTechCore.Tests
         public void IntegrationTest()
         {
             var parser = new ConfigurationParser(StellarisCoreSettings.Settings.TechRegex, SUBSTITUTIONS);
-            parser.ParseSetVariables(File.ReadAllText($"{StellarisCoreSettings.Settings.VariablesPath}"));
+            parser.ParseSetVariables(File.ReadAllText(StellarisCoreSettings.Settings.VariablesPath));
+            foreach (var filePath in Directory.GetFiles(StellarisCoreSettings.Settings.TechLocalizationFilesPath))
+            {
+                parser.ParseSetLocalization(File.ReadAllText(filePath));
+            }
             var techs = new List<Technology>();
             var partitionedTechs = new Dictionary<string, List<Technology>>();
             foreach (StellarisConfigFile file in StellarisCoreSettings.Settings.TechFiles)
@@ -109,7 +113,7 @@ namespace StellarisTechCore.Tests
             bool weight_modifier = false;
 
             TechCategory currentCategory = (TechCategory)(-1);
-            foreach (var t in techs.OrderBy(t => t.Area).ThenBy(t => t.Category).ThenBy(t => t.ID))
+            foreach (var t in techs.OrderBy(t => t.ID))//.OrderBy(t => t.Area).ThenBy(t => t.Category).ThenBy(t => t.ID))
             {
                 if (!string.IsNullOrEmpty(t.AIUpdateType))
                 {
@@ -172,13 +176,14 @@ namespace StellarisTechCore.Tests
                     weight_modifier = true;
                 }
 
-                if (t.Category != currentCategory)
-                {
-                    currentCategory = t.Category;
-                    Console.WriteLine(t.Category.ToString());
-                }
+                //if (t.Category != currentCategory)
+                //{
+                //    currentCategory = t.Category;
+                //    Console.WriteLine(t.Category.ToString());
+                //}
 
-                Console.WriteLine($"\t{t.ID}{(t.Levels != null ? $": Repeatable {t.Levels}" : "")}");
+                //Console.WriteLine($"\t{t.ID}{(t.Levels != null ? $": Repeatable {t.Levels}" : "")}");
+                Console.WriteLine($"\t{t.ID}: \"{t.Name}\"");
             }
 
             Assert.IsTrue(ai_update_type);

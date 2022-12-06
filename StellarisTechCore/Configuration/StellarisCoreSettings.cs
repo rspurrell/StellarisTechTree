@@ -20,11 +20,32 @@
             //    _settings = configSection.Get<StellarisCoreSettings>();
             //}, _settings);
         }
+        public string RootPath { get; set; }
 
-        public string TechPath { get; set; }
-        public string TechRegex { get; set; }
+        private string _techLocalizationFilesPath;
+        public string TechLocalizationFilesPath
+        {
+            get => string.Concat(RootPath, _techLocalizationFilesPath);
+            set => _techLocalizationFilesPath = value;
+        }
+
         public List<StellarisConfigFile> TechFiles { get; set; }
-        public string VariablesPath { get; set; }
+
+        private string _techPath;
+        public string TechPath
+        {
+            get => string.Concat(RootPath, _techPath);
+            set => _techPath = value;
+        }
+
+        public string TechRegex { get; set; }
+
+        private string _variablesPath;
+        public string VariablesPath
+        {
+            get => string.Concat(RootPath, _variablesPath);
+            set => _variablesPath = value;
+        }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public StellarisCoreSettings() { }
